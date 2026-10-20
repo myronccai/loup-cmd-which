@@ -3,11 +3,12 @@
 # Application identity. Keep APP_NAME and APP_VERSION in step with `name`
 # and `version` in package.lppkg.
 
-pub const APP_NAME: string = "myapp";
+pub const APP_NAME: string = "which";
 pub const APP_VERSION: string = "0.1.0";
-pub const APP_SUMMARY: string = "A command-line application written in Loup.";
+pub const APP_SUMMARY: string = "Locate a command on PATH (a Loup recreation of debianutils which).";
 
-# Exit statuses returned by main().
+# Exit statuses returned by main(), as debianutils which uses them.
 pub const EXIT_OK: int = 0;
+# Some name was not found (or no name was given).
 pub const EXIT_FAILURE: int = 1;
 pub const EXIT_USAGE: int = 2;

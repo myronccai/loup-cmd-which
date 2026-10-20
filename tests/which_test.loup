@@ -1,0 +1,57 @@
+@mode(host.dual)
+
+# PATH handling, plus searches in tests/fixtures (the tests run from the
+# repository root): bin1 has tool, both and a directory subdir; bin2 has
+# both.
+
+from debug.assert import (expect, expectEq);
+from cli.args import (parse_args);
+from commands.which import (split_path, candidates, find_command, search);
+
+const FIXTURE_PATH: string = "tests/fixtures/bin1:tests/fixtures/bin2";
+
+func test_split_path(): void {
+    expectEq(split_path("/usr/bin:/bin").join(","), "/usr/bin,/bin", "two directories");
+    expectEq(split_path(":/bin").join(","), ".,/bin", "leading colon");
+    expectEq(split_path("/bin:").join(","), "/bin,.", "trailing colon");
+    expectEq(split_path("/a::/b").join(","), "/a,.,/b", "doubled colon");
+    expectEq(split_path("").len(), 0, "empty PATH");
+}
+
+func test_candidates(): void {
+    expectEq(candidates("ls", ["/usr/bin", "."]).join(","), "/usr/bin/ls,./ls", "joined");
+    expectEq(candidates("ls", ["/usr/bin/"]).join(","), "/usr/bin/ls", "trailing slash");
+    expectEq(candidates("./ls", ["/usr/bin"]).join(","), "./ls", "a name with a slash is used as it is");
+    expectEq(candidates("", ["/usr/bin"]).len(), 0, "empty name");
+}
+
+func test_first_match(): void {
+    let found = find_command("both", split_path(FIXTURE_PATH), false);
+    expectEq(found.join(","), "tests/fixtures/bin1/both", "first directory wins");
+}
+
+func test_all_matches(): void {
+    let found = find_command("both", split_path(FIXTURE_PATH), true);
+    expectEq(found.join(","), "tests/fixtures/bin1/both,tests/fixtures/bin2/both", "-a");
+}
+
+func test_directories_do_not_match(): void {
+    expectEq(find_command("subdir", split_path(FIXTURE_PATH), true).len(), 0, "subdir");
+    expectEq(find_command("tests/fixtures/bin1", split_path(FIXTURE_PATH), false).len(), 0, "a directory path");
+}
+
+func test_name_with_slash(): void {
+    let found = find_command("tests/fixtures/bin1/tool", split_path("/nonexistent"), false);
+    expectEq(found.join(","), "tests/fixtures/bin1/tool", "checked directly");
+}
+
+func test_search_status(): void {
+    let ok = search(parse_args(["tool", "both"]).unwrap(), FIXTURE_PATH);
+    expectEq(ok.status, 0, "both found");
+    expectEq(ok.lines.len(), 2, "two lines");
+    let partly = search(parse_args(["tool", "nope"]).unwrap(), FIXTURE_PATH);
+    expectEq(partly.status, 1, "one missing");
+    expectEq(partly.lines.join(","), "tests/fixtures/bin1/tool", "the found one is printed");
+    let none: list[string] = [];
+    expectEq(search(parse_args(none).unwrap(), FIXTURE_PATH).status, 1, "no names");
+}

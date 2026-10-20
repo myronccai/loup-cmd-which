@@ -1,0 +1,96 @@
+@mode(host.dual)
+
+# which: for each NAME, the first (or with -a every) PATH directory that
+# holds a regular file of that name. Loup 1.26.0's io.fs cannot read
+# permissions, so the file does not have to be executable (see the README).
+
+from io.fs import (isFile);
+from io.path import (join);
+from appinfo import (EXIT_OK, EXIT_FAILURE);
+from cli.args import (Options);
+
+# The search path dash uses when PATH is not set at all, which is what the
+# debianutils script then searches.
+pub const DEFAULT_PATH: string = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+
+# The directories to search, in order. An empty entry (a leading, trailing
+# or doubled colon) is the current directory; an empty PATH has none.
+pub func split_path(path: string): list[string] {
+    var dirs: list[string] = [];
+    if (path.len() == 0) {
+        return dirs;
+    }
+    for (entry in path.split(":")) {
+        if (entry.len() == 0) {
+            dirs.push(".");
+        } else {
+            dirs.push(entry);
+        }
+    }
+    return dirs;
+}
+
+# The paths to try for `name`: the name itself if it contains a slash,
+# otherwise the name in each directory.
+pub func candidates(name: string, dirs: list[string]): list[string] {
+    var out: list[string] = [];
+    if (name.index_of("/") >= 0) {
+        out.push(name);
+        return out;
+    }
+    if (name.len() == 0) {
+        return out;
+    }
+    for (dir in dirs) {
+        out.push(join([dir, name]));
+    }
+    return out;
+}
+
+# The candidates for `name` that are regular files (following symbolic
+# links): all of them with -a, otherwise the first.
+pub func find_command(name: string, dirs: list[string], all: bool): list[string] {
+    var found: list[string] = [];
+    for (path in candidates(name, dirs)) {
+        if (isFile(path)) {
+            found.push(path);
+            if (!all) {
+                break;
+            }
+        }
+    }
+    return found;
+}
+
+# What which prints and its exit status.
+pub struct Report {
+    pub lines: list[string];
+    pub status: int;
+}
+
+# Looks up every name; `path` is the value of PATH.
+pub func search(opts: Options, path: string): Report {
+    let dirs = split_path(path);
+    var lines: list[string] = [];
+    var status = if (opts.names.len() == 0) { EXIT_FAILURE } else { EXIT_OK };
+    for (name in opts.names) {
+        let found = find_command(name, dirs, opts.all);
+        if (found.len() == 0) {
+            status = EXIT_FAILURE;
+        }
+        for (p in found) {
+            lines.push(p);
+        }
+    }
+    return Report(lines = lines, status = status);
+}
+
+pub func run_which(opts: Options): int {
+    let report = search(opts, env("PATH") ?? DEFAULT_PATH);
+    if (!opts.silent) {
+        for (line in report.lines) {
+            println(line);
+        }
+    }
+    return report.status;
+}

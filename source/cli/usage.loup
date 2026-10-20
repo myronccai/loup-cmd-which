@@ -1,28 +1,29 @@
 @mode(host.dual)
 
-from appinfo import (APP_NAME, APP_VERSION, APP_SUMMARY);
-from cli.args import (DEFAULT_GREETING);
+from appinfo import (APP_NAME, APP_VERSION);
 
 pub func usage(): string {
     let lines = [
-        i"usage: {$ APP_NAME $} [OPTIONS] COMMAND [ARGS...]",
+        i"Usage: {$ APP_NAME $} [-as] [--] NAME...",
+        "Print the full path of each NAME that would be run as a command,",
+        "searching the directories in PATH in order.",
         "",
-        APP_SUMMARY,
+        "  -a             print all matching paths, not just the first",
+        "  -s             silent: print nothing, only set the exit status",
+        "      --help     display this help and exit",
+        "      --version  output version information and exit",
         "",
-        "Commands:",
-        "  hello [NAME]          Print a greeting (NAME defaults to 'world')",
-        "  help                  Show this help",
+        "A NAME containing a slash is checked as it is, without searching PATH.",
+        "An empty entry in PATH means the current directory.",
         "",
-        "Options:",
-        i"  -g, --greeting TEXT   Greeting used by 'hello' (default: {$ DEFAULT_GREETING $})",
-        "      --shout           Print the greeting in upper case",
-        "  -v, --verbose         Print diagnostic messages to stderr",
-        "  -h, --help            Show this help and exit",
-        "  -V, --version         Show the version and exit",
+        "Exit status:",
+        " 0  if every NAME was found,",
+        " 1  if some NAME was not found, or no NAME was given,",
+        " 2  if an option is invalid.",
     ];
     return lines.join("\n");
 }
 
 pub func version_line(): string {
-    return i"{$ APP_NAME $} {$ APP_VERSION $}";
+    return i"{$ APP_NAME $} (loup-cmd-{$ APP_NAME $}) {$ APP_VERSION $}";
 }
