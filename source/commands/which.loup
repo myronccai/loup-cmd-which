@@ -3,6 +3,11 @@
 # which: for each NAME, the first (or with -a every) PATH directory that
 # holds a regular file of that name. Loup 1.26.0's io.fs cannot read
 # permissions, so the file does not have to be executable (see the README).
+#
+# Runtime: host.dual. Compiled into the native binary build/which by
+# `make build`; `loup run source/main.loup` interprets the same code, and
+# tests/which_test.loup exercises the search under Stage0 (`make test`).
+# Only run_which reads the environment (PATH) and prints.
 
 from io.fs import (isFile);
 from io.path import (join);

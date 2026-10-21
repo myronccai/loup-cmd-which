@@ -1,8 +1,12 @@
 @mode(host.dual)
 
-# PATH handling, plus searches in tests/fixtures (the tests run from the
-# repository root): bin1 has tool, both and a directory subdir; bin2 has
-# both.
+# Unit tests for PATH handling, plus searches in tests/fixtures (the tests
+# run from the repository root): bin1 has tool, both and a directory
+# subdir; bin2 has both.
+#
+# Runtime: host.dual, run by the test runner: `make test` interprets this file
+# with Stage0 (`loup-bootstrap test`, source/ on LOUPPATH), one test per
+# `func test_*()`. It is not part of the binary.
 
 from debug.assert import (expect, expectEq);
 from cli.args import (parse_args);

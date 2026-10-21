@@ -4,6 +4,10 @@
 # debianutils script uses it: single-letter options `a` and `s`, combinable
 # (`-as`), parsed only until the first argument that is not an option; `--`
 # ends the options. `--help` and `--version` are accepted in the same place.
+#
+# Runtime: host.dual. Compiled into the native binary build/which by
+# `make build`; `loup run source/main.loup` interprets the same code, and
+# tests/args_test.loup exercises it under Stage0 (`make test`).
 
 pub struct Options {
     pub help: bool;
